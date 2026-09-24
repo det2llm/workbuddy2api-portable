@@ -159,7 +159,6 @@ python control_panel.py --port 9000 --no-browser
 | VS Code Copilot Chat (BYOK) | `.../v1/chat/completions` | 走 UI 配置，勿手改 JSON；`apiKey` 不要填明文                  |
 | Cline / Roo Code / Continue | `http://<局域网IP>:<端口>/v1`  | 模型 ID 从 `models-trae.md` 选                       |
 
-<https://mp.weixin.qq.com/s/cnr2qaDrLV7NfqRo0zJwbA>
 
 账号池权重、熔断阈值、定时任务开关、双域适配等更细的配置字段，请查阅文末项目地址处的上游文档，本项目不重复搬运。
 
