@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkBuddy2API 控制面板</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">W</div>
+    <div class="brand-txt">
+      <b>WorkBuddy2API</b>
+      <span>控制面板</span>
+    </div>
+  </div>
+
+  <div class="topstat">
+    <span class="dot" id="svcDot"></span>
+    <span id="svcText">检测中…</span>
+    <span class="sep"></span>
+    <span class="kv">端口 <b id="svcPort">-</b></span>
+    <span class="kv">PID <b id="svcPid">-</b></span>
+    <span class="kv">账号 <b id="svcAcc">-</b></span>
+    <span class="kv">模型 <b id="svcModel">-</b></span>
+  </div>
+
+  <div class="topbtns">
+    <button class="btn primary" id="btnQuickStart">启动网关</button>
+    <button class="btn" id="btnQuickStop">停止</button>
+    <button class="btn ghost" id="btnRefresh">刷新</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="nav-title">操作步骤</div>
+    <a class="nav-item active" data-view="install">
+      <span class="num">1</span>
+      <span class="txt">安装 / 配置<em>安装器 + 参数 + 接入信息</em></span>
+    </a>
+    <a class="nav-item" data-view="account">
+      <span class="num">2</span>
+      <span class="txt">添加账号 / 模型列表<em>登录 + 自动拉取模型</em></span>
+    </a>
+    <a class="nav-item" data-view="run">
+      <span class="num">3</span>
+      <span class="txt">启动网关<em>前台 / 后台 / 自启</em></span>
+    </a>
+
+    <div class="qrbox" id="qrBox" hidden>
+      <button class="qr-close" id="btnQrClose" title="关闭">×</button>
+      <img src="公众号二维码.jpg" alt="公众号二维码" id="qrImg">
+      <div class="qr-cap">关注我，免费获取更多好用的工具！</div>
+    </div>
+
+    <div class="side-foot">
+      <div id="sidePath" class="path">-</div>
+      <div class="row">
+        <button class="btn ghost sm" id="btnOpenRoot">打开目录</button>
+        <a class="link sm" id="btnQrShow" hidden>显示二维码</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <!-- ═════════ 步骤 1：安装 / 配置 ═════════ -->
+    <section class="view active" id="view-install">
+      <div class="view-head">
+        <h2>① 安装 / 配置</h2>
+        <p>写入 config.json、生成启动脚本与客户端配置，并在这里查看接入信息。</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">环境检查</div>
+        <div class="env-grid">
+          <div class="env"><span>Python 版本</span><b id="envPy">-</b></div>
+          <div class="env"><span>Go 工具链</span><b id="envGo">-</b></div>
+          <div class="env"><span>wb2api.exe</span><b id="envExe">-</b></div>
+          <div class="env"><span>Go 源码</span><b id="envSrc">-</b></div>
+          <div class="env wide"><span>Python 解释器</span><b id="envPyExe">-</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">参数配置</div>
+
+        <div class="field">
+          <label>监听端口</label>
+          <div class="row">
+            <input id="inPort" type="number" min="2" max="65535" value="8080">
+            <button class="btn ghost" id="btnCheckPort">检测占用</button>
+            <button class="btn ghost" id="btnKillPort">结束占用进程</button>
+          </div>
+          <div class="hint" id="portHint">7863 常被 Windows(Hyper-V/Docker) 预留而绑定失败，建议 8080。</div>
+        </div>
+
+        <div class="field">
+          <label>API 密钥</label>
+          <div class="radios">
+            <label class="radio"><input type="radio" name="keymode" value="none"><span>不鉴权（留空）</span></label>
+            <label class="radio"><input type="radio" name="keymode" value="custom" checked><span>自定义 / 保留原值</span></label>
+            <label class="radio"><input type="radio" name="keymode" value="random"><span>随机生成强密钥</span></label>
+          </div>
+          <div class="row">
+            <input id="inKey" type="text" placeholder="留空 = 不鉴权，任何人可调用">
+            <button class="btn ghost" id="btnGenKey">随机生成</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>对外访问 IP</label>
+          <div class="row">
+            <input id="inHost" type="text" placeholder="192.168.x.x">
+            <button class="btn ghost" id="btnUseLan">用探测值</button>
+          </div>
+          <div class="hint">客户端（Trae CN、WSL/远程 VS Code）用 <code>127.0.0.1</code> 会连不上，必须填局域网 IP。<span id="lanHint"></span></div>
+        </div>
+
+        <div class="field">
+          <label>附加选项</label>
+          <div class="checks">
+            <label class="chk"><input type="checkbox" id="chkAutostart"><span>写入开机自启（当前用户「启动」文件夹，无需管理员）</span></label>
+            <label class="chk"><input type="checkbox" id="chkStartNow"><span>完成后立即启动网关</span></label>
+            <label class="chk"><input type="checkbox" id="chkModels" checked><span>尝试刷新 models-trae.md 模型清单</span></label>
+          </div>
+        </div>
+
+        <div class="row btns">
+          <button class="btn primary" id="btnInstall">一键安装 / 应用配置</button>
+          <button class="btn" id="btnSaveCfg">仅保存配置</button>
+          <button class="btn ghost" id="btnGotoStep2">下一步：添加账号 →</button>
+        </div>
+
+        <div class="preview" id="installPreview"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">客户端接入信息</div>
+        <div class="kvlist" id="accessList"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn ghost" id="btnCopyBase">复制网关地址</button>
+          <button class="btn ghost" id="btnShowKey">显示 / 隐藏密钥</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">客户端配置.md</div>
+        <textarea id="guideBox" class="mdbox" readonly spellcheck="false"></textarea>
+        <div class="row">
+          <button class="btn ghost" id="btnCopyGuide">复制全文</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ 步骤 2：添加账号 / 模型列表 ═════════ -->
+    <section class="view" id="view-account">
+      <div class="view-head">
+        <h2>② 添加账号 / 模型列表</h2>
+        <p>登录后会自动重载网关并拉取该账号可用的模型列表，直接在下面展示。</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">1 · 选择版本并获取登录链接</div>
+        <div class="radios">
+          <label class="radio"><input type="radio" name="realm" value="cn" checked><span>国内版 cn（copilot.tencent.com）</span></label>
+          <label class="radio"><input type="radio" name="realm" value="global"><span>国际版 global（workbuddy.ai）</span></label>
+        </div>
+        <label class="chk" style="margin-bottom:8px">
+          <input type="checkbox" id="chkAutoAfter" checked>
+          <span>添加后自动重启网关并拉取模型列表（推荐，新账号要重启才生效）</span>
+        </label>
+        <div class="row">
+          <button class="btn primary" id="btnGetUrl">获取登录链接</button>
+        </div>
+
+        <div class="authbox" id="authBox" hidden>
+          <div class="auth-label">请在浏览器中打开下面链接并完成登录：</div>
+          <a class="auth-url" id="authUrl" href="#" target="_blank" rel="noreferrer"></a>
+          <div class="row">
+            <button class="btn" id="btnOpenUrl">在浏览器中打开</button>
+            <button class="btn ghost" id="btnCopyUrl">复制链接</button>
+          </div>
+          <ol class="steps">
+            <li>点上面的按钮，在浏览器里完整登录成功（看到登录后的页面为止）。</li>
+            <li>回到本页面点「我已完成登录」。</li>
+            <li><b>顺序反了会拿不到 token</b>，这是最常见的失败原因。</li>
+          </ol>
+          <div class="row">
+            <button class="btn primary" id="btnFinishLogin" disabled>我已完成登录，完成添加</button>
+          </div>
+        </div>
+        <div class="result" id="acctResult"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">已保存的账号（auths/）</div>
+        <table class="tbl" id="tblAcc">
+          <thead><tr><th>昵称</th><th>UID</th><th>版本</th><th>token 剩余</th><th>文件</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="row">
+          <button class="btn ghost" id="btnOpenAuths">打开 auths 目录</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          该账号可用模型
+          <span class="badge" id="modelBadge">-</span>
+        </div>
+        <div class="row" style="margin-bottom:8px">
+          <input id="modelFilter" type="text" placeholder="搜索模型 ID / 名称…" style="flex:1 1 220px">
+          <button class="btn" id="btnReloadModels">重新拉取模型列表</button>
+          <span class="hint" id="modelMsg"></span>
+        </div>
+        <table class="tbl" id="tblModels">
+          <thead><tr><th>模型 ID</th><th>展示名</th><th>倍率</th><th>说明</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═════════ 步骤 3：启动网关（前台 / 后台合并） ═════════ -->
+    <section class="view" id="view-run">
+      <div class="view-head">
+        <h2>③ 启动网关</h2>
+        <p>前台 = 弹独立控制台窗口；后台 = 无窗口静默运行。两者输出都会实时回显到下方日志区。</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">启动方式</div>
+        <div class="modes">
+          <label class="mode">
+            <input type="radio" name="runmode" value="hidden" checked>
+            <div class="mode-body">
+              <b>后台隐藏启动</b>
+              <span>无窗口、不打扰，等同原 4_run-hidden.vbs</span>
+            </div>
+          </label>
+          <label class="mode">
+            <input type="radio" name="runmode" value="console">
+            <div class="mode-body">
+              <b>前台启动</b>
+              <span>弹出控制台窗口，等同原 4_run.bat</span>
+            </div>
+          </label>
+        </div>
+        <div class="row btns">
+          <button class="btn primary" id="btnDoStart">启动网关</button>
+          <button class="btn" id="btnDoRestart">重启网关</button>
+          <button class="btn danger" id="btnDoStop">停止网关</button>
+          <button class="btn ghost" id="btnProbe">探活 /healthz</button>
+        </div>
+        <div class="hint">加号、改 config 之后必须重启网关才会生效。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">运行状态</div>
+        <div class="stat-grid big" id="statGridRun"></div>
+        <div class="row btns">
+          <button class="btn ghost" id="btnOpenHealth">打开 /healthz</button>
+          <button class="btn ghost" id="btnOpenStatus">打开 /status</button>
+          <button class="btn ghost" id="btnOpenLogs">打开日志目录</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">开机自启</div>
+        <div class="row">
+          <span class="badge" id="autoBadge">-</span>
+          <span class="hint" id="autoPath"></span>
+        </div>
+        <div class="row btns">
+          <button class="btn" id="btnAutoOn">启用开机自启</button>
+          <button class="btn" id="btnAutoOff">关闭开机自启</button>
+        </div>
+        <div class="hint">自启脚本：<code>WorkBuddy2API-Autostart.vbs</code>，写入当前用户的「启动」文件夹，不需要管理员权限。</div>
+      </div>
+    </section>
+
+    <div class="console">
+      <div class="console-head">
+        <b>执行日志</b>
+        <span class="hint">所有操作的输出都显示在这里（含网关 stdout）</span>
+        <div class="grow"></div>
+        <label class="chk inline"><input type="checkbox" id="chkAutoscroll" checked><span>自动滚动</span></label>
+        <button class="btn ghost sm" id="btnClearLog">清空</button>
+      </div>
+      <div class="console-body" id="logBody"></div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

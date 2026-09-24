@@ -1,0 +1,25 @@
+# 运行期产物 / 隐私数据 —— 切勿提交
+auths
+data
+logs
+客户端配置.md
+models-trae.md
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+
+# 含本机 API 密钥，由步骤①自动生成
+config.json
+
+# WorkBuddy 本地会话目录
+.workbuddy/
+
+# 公众号文章素材与成品（非源码，勿提交）
+公众号文章图片/
+*公众号文章*.html
+
+# 如需把仓库做得更轻，可取消下面这行注释：
+# 此时 runtime/ 改由 GitHub Release 附件提供，用户下载后解压到项目根目录即可
+# runtime/
